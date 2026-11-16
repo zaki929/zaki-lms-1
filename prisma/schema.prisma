@@ -1,0 +1,142 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      String // ADMIN | GURU | SISWA | KEPSEK | KURIKULUM
+  nip       String?
+  nis       String?
+  phone     String?
+  gender    String?
+  avatar    String?
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  kelasDiajar Kelas[]    @relation("GuruKelas")
+  kelasDiikuti Kelas[]    @relation("SiswaKelas")
+  tugasDibuat  Tugas[]    @relation("GuruTugas")
+  pengumpulan  Pengumpulan[]
+  nilaiDiberi  Nilai[]     @relation("GuruNilai")
+  nilai        Nilai[]     @relation("SiswaNilai")
+  absensi      Absensi[]
+  pengumuman   Pengumuman[]
+}
+
+model Kelas {
+  id     String @id @default(cuid())
+  nama   String
+  tingkat String
+  tahun  String
+  wali   String?
+
+  guru    User? @relation("GuruKelas", fields: [guruId], references: [id])
+  guruId  String?
+  siswa   User[] @relation("SiswaKelas")
+  mapel   Mapel[]
+  jadwal  Jadwal[]
+  tugas   Tugas[]
+}
+
+model Mapel {
+  id       String @id @default(cuid())
+  nama     String
+  kode     String @unique
+  deskripsi String?
+  guruId   String?
+
+  kelas Kelas[]
+  jadwal Jadwal[]
+  tugas Tugas[]
+}
+
+model Jadwal {
+  id      String @id @default(cuid())
+  hari    String
+  jamMulai String
+  jamSelesai String
+  ruangan String?
+
+  kelasId String
+  mapelId String
+  kelas   Kelas @relation(fields: [kelasId], references: [id], onDelete: Cascade)
+  mapel   Mapel @relation(fields: [mapelId], references: [id], onDelete: Cascade)
+}
+
+model Tugas {
+  id          String   @id @default(cuid())
+  judul       String
+  deskripsi   String
+  deadline    DateTime
+  lampiran    String?
+  dibuatPada  DateTime @default(now())
+
+  guruId String
+  kelasId String
+  mapelId String
+  guru   User  @relation("GuruTugas", fields: [guruId], references: [id])
+  kelas   Kelas @relation(fields: [kelasId], references: [id], onDelete: Cascade)
+  mapel   Mapel @relation(fields: [mapelId], references: [id])
+
+  pengumpulan Pengumpulan[]
+  nilai       Nilai[]
+}
+
+model Pengumpulan {
+  id        String   @id @default(cuid())
+  file      String?
+  catatan   String?
+  nilaiAkhir Float?
+  submitPada DateTime @default(now())
+
+  tugasId String
+  siswaId String
+  tugas   Tugas @relation(fields: [tugasId], references: [id], onDelete: Cascade)
+  siswa   User  @relation(fields: [siswaId], references: [id], onDelete: Cascade)
+}
+
+model Nilai {
+  id        String @id @default(cuid())
+  tipe      String // UTS | UAS | TUGAS | HARIAN
+  semester  Int    @default(1)
+  nilai     Float
+  catatan   String?
+
+  siswaId String
+  tugasId String?
+  guruId  String
+  siswa   User  @relation("SiswaNilai", fields: [siswaId], references: [id], onDelete: Cascade)
+  tugas   Tugas? @relation(fields: [tugasId], references: [id])
+  guru    User  @relation("GuruNilai", fields: [guruId], references: [id])
+}
+
+model Absensi {
+  id       String @id @default(cuid())
+  tanggal  DateTime
+  status   String // HADIR | IZIN | SAKIT | ALFA
+  catatan  String?
+
+  siswaId String
+  siswa   User @relation(fields: [siswaId], references: [id], onDelete: Cascade)
+
+  @@unique([siswaId, tanggal])
+}
+
+model Pengumuman {
+  id     String @id @default(cuid())
+  judul  String
+  isi    String
+  target String // SEMUA | GURU | SISWA | KEPSEK | KURIKULUM
+  dibuatPada DateTime @default(now())
+
+  authorId String
+  author   User @relation(fields: [authorId], references: [id])
+}
