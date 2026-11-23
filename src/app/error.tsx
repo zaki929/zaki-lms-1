@@ -29,7 +29,7 @@ export default function GlobalError({
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center gap-5 bg-slate-900 px-4 text-center">
-      <p className="text-xs font-semibold uppercase tracking-widest text-rose-400">
+      <p className="text-xs font-semibold uppercase tracking-widest text-red-400">
         Terjadi kesalahan
       </p>
       <h1 className="max-w-md text-xl font-semibold text-white">
@@ -51,7 +51,7 @@ export default function GlobalError({
         <button
           type="button"
           onClick={reset}
-          className="rounded-lg bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-500"
+          className="rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-500"
         >
           Muat Ulang
         </button>

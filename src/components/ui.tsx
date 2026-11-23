@@ -12,10 +12,10 @@ export function Card({
   className?: string;
 }) {
   return (
-    <section className={`overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm ${className}`}>
+    <section className={`rounded-xl border border-slate-200 bg-white ${className}`}>
       {title && (
         <header className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 px-4 py-3 sm:px-5">
-          <h2 className="text-sm font-semibold text-slate-700">{title}</h2>
+          <h2 className="text-sm font-semibold text-slate-800">{title}</h2>
           {action}
         </header>
       )}
@@ -28,7 +28,7 @@ export function StatCard({
   label,
   value,
   hint,
-  accent = "bg-indigo-500",
+  accent = "bg-blue-500",
 }: {
   label: string;
   value: string | number;
@@ -36,11 +36,11 @@ export function StatCard({
   accent?: string;
 }) {
   return (
-    <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:gap-4 sm:p-5">
-      <div className={`h-11 w-1.5 shrink-0 rounded-full ${accent}`} aria-hidden="true" />
+    <div className="flex items-center gap-4 rounded-xl border border-slate-200 bg-white p-4 sm:p-5">
+      <div className={`h-10 w-1 shrink-0 rounded-full ${accent}`} aria-hidden="true" />
       <div className="min-w-0">
-        <p className="truncate text-xs font-medium uppercase tracking-wide text-slate-500">{label}</p>
-        <p className="mt-0.5 text-2xl font-bold text-slate-800">{value}</p>
+        <p className="truncate text-xs font-medium text-slate-500">{label}</p>
+        <p className="mt-0.5 text-2xl font-semibold tracking-tight text-slate-900">{value}</p>
         {hint && <p className="truncate text-xs text-slate-400">{hint}</p>}
       </div>
     </div>
@@ -58,9 +58,9 @@ export function Badge({
     slate: "bg-slate-100 text-slate-700",
     green: "bg-emerald-100 text-emerald-700",
     amber: "bg-amber-100 text-amber-700",
-    red: "bg-rose-100 text-rose-700",
+    red: "bg-red-100 text-red-700",
     blue: "bg-sky-100 text-sky-700",
-    violet: "bg-violet-100 text-violet-700",
+    violet: "bg-slate-100 text-slate-700",
   };
   return (
     <span
@@ -80,9 +80,13 @@ export function EmptyState({ message }: { message: string }) {
   );
 }
 
+export function SectionTitle({ children }: { children: React.ReactNode }) {
+  return <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-slate-400">{children}</p>;
+}
+
 export function BackLink({ href, children }: { href: string; children: React.ReactNode }) {
   return (
-    <Link href={href} className="text-sm text-indigo-600 hover:underline">
+    <Link href={href} className="text-sm text-blue-600 hover:underline">
       &larr; {children}
     </Link>
   );
@@ -100,7 +104,7 @@ export function PageHeader({
   return (
     <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
       <div className="min-w-0">
-        <h1 className="text-2xl font-bold tracking-tight text-slate-800">{title}</h1>
+        <h1 className="text-2xl font-semibold tracking-tight text-slate-900">{title}</h1>
         {desc && <p className="mt-1 text-sm text-slate-500">{desc}</p>}
       </div>
       {action}

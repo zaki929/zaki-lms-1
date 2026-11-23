@@ -66,7 +66,7 @@ export default async function AbsensiPage() {
         <StatCard label="Hadir" value={hitung("HADIR")} accent="bg-emerald-500" hint={persen(hitung("HADIR"))} />
         <StatCard label="Izin" value={hitung("IZIN")} accent="bg-sky-500" hint={persen(hitung("IZIN"))} />
         <StatCard label="Sakit" value={hitung("SAKIT")} accent="bg-amber-500" hint={persen(hitung("SAKIT"))} />
-        <StatCard label="Alfa" value={hitung("ALFA")} accent="bg-rose-500" hint={persen(hitung("ALFA"))} />
+        <StatCard label="Alfa" value={hitung("ALFA")} accent="bg-red-500" hint={persen(hitung("ALFA"))} />
       </div>
       <p className="mt-2 text-xs text-slate-400">
         Rekap dihitung dari seluruh riwayat ({totalRekap} catatan), bukan hanya 50 baris terakhir.

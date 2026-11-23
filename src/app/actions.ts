@@ -697,6 +697,156 @@ async function createPengumuman(fd: FormData): Promise<ActionState> {
   return ok("Pengumuman berhasil dikirim.");
 }
 
+async function updateJadwal(fd: FormData): Promise<ActionState> {
+  const u = await currentUser();
+  requireRole(u.role, ["ADMIN", "KURIKULUM", "KEPSEK"]);
+
+  const id = str(fd, "id");
+  const hari = str(fd, "hari");
+  const jamMulai = str(fd, "jamMulai");
+  const jamSelesai = str(fd, "jamSelesai");
+  const ruangan = str(fd, "ruangan");
+  const kelasId = str(fd, "kelasId");
+  const mapelId = str(fd, "mapelId");
+
+  if (!id) return err("Jadwal tidak valid.");
+  if (!hari) return err("Hari wajib diisi.");
+  if (!jamMulai || !jamSelesai) return err("Jam mulai dan selesai wajib diisi.");
+
+  const cek = await validateKelasMapel(kelasId, mapelId);
+  if (cek) return cek;
+
+  const ada = await prisma.jadwal.findUnique({ where: { id } });
+  if (!ada) return err("Jadwal tidak ditemukan.");
+
+  await prisma.jadwal.update({
+    where: { id },
+    data: {
+      hari,
+      jamMulai,
+      jamSelesai,
+      ruangan: ruangan || null,
+      kelasId,
+      mapelId,
+    },
+  });
+
+  revalidatePath("/jadwal");
+  revalidatePath("/dashboard");
+  return ok("Jadwal diperbarui.");
+}
+
+async function updateMapel(fd: FormData): Promise<ActionState> {
+  const u = await currentUser();
+  requireRole(u.role, ["ADMIN", "KURIKULUM"]);
+
+  const id = str(fd, "id");
+  const nama = str(fd, "nama");
+  const kode = str(fd, "kode").toUpperCase();
+  const deskripsi = str(fd, "deskripsi");
+  const kelasIds = fd.getAll("kelasId").map(String).filter(Boolean);
+
+  if (!id) return err("Mata pelajaran tidak valid.");
+  if (!nama) return err("Nama mapel wajib diisi.");
+  if (!kode) return err("Kode mapel wajib diisi.");
+
+  const ada = await prisma.mapel.findUnique({ where: { id } });
+  if (!ada) return err("Mata pelajaran tidak ditemukan.");
+
+  const duplikat = await prisma.mapel.findFirst({
+    where: { kode, NOT: { id } },
+  });
+  if (duplikat) return err("Kode mapel sudah digunakan.");
+
+  await prisma.mapel.update({
+    where: { id },
+    data: {
+      nama,
+      kode,
+      deskripsi: deskripsi || null,
+      kelas: { set: kelasIds.map((kid) => ({ id: kid })) },
+    },
+  });
+
+  revalidatePath("/mapel");
+  revalidatePath("/dashboard");
+  return ok("Mata pelajaran diperbarui.");
+}
+
+async function updateKelas(fd: FormData): Promise<ActionState> {
+  const u = await currentUser();
+  requireRole(u.role, ["ADMIN"]);
+
+  const id = str(fd, "id");
+  const nama = str(fd, "nama");
+  const tingkat = str(fd, "tingkat");
+  const tahun = str(fd, "tahun");
+  const wali = str(fd, "wali");
+  const guruId = str(fd, "guruId");
+  const siswaIds = fd.getAll("siswaId").map(String).filter(Boolean);
+
+  if (!id) return err("Kelas tidak valid.");
+  if (!nama) return err("Nama kelas wajib diisi.");
+  if (!tingkat) return err("Tingkat wajib diisi.");
+  if (!tahun) return err("Tahun ajaran wajib diisi.");
+
+  const ada = await prisma.kelas.findUnique({ where: { id } });
+  if (!ada) return err("Kelas tidak ditemukan.");
+
+  if (guruId) {
+    const g = await prisma.user.findFirst({ where: { id: guruId, role: "GURU" } });
+    if (!g) return err("Guru pengampu tidak valid.");
+  }
+
+  await prisma.kelas.update({
+    where: { id },
+    data: {
+      nama,
+      tingkat,
+      tahun,
+      wali: wali || null,
+      guruId: guruId || null,
+      siswa: { set: siswaIds.map((sid) => ({ id: sid })) },
+    },
+  });
+
+  revalidatePath("/kelas");
+  revalidatePath("/dashboard");
+  return ok("Kelas diperbarui.");
+}
+
+async function updatePengumuman(fd: FormData): Promise<ActionState> {
+  const u = await currentUser();
+  requireRole(u.role, ["ADMIN", "GURU", "KEPSEK", "KURIKULUM"]);
+
+  const id = str(fd, "id");
+  const judul = str(fd, "judul");
+  const isi = str(fd, "isi");
+  const target = str(fd, "target") || "SEMUA";
+
+  if (!id) return err("Pengumuman tidak valid.");
+  if (!judul) return err("Judul wajib diisi.");
+  if (!isi) return err("Isi pengumuman wajib diisi.");
+  if (!["SEMUA", "ADMIN", "GURU", "SISWA", "KEPSEK", "KURIKULUM"].includes(target)) {
+    return err("Target tidak valid.");
+  }
+
+  const p = await prisma.pengumuman.findUnique({ where: { id } });
+  if (!p) return err("Pengumuman tidak ditemukan.");
+  if (p.authorId !== u.id && u.role !== "ADMIN") {
+    return err("Hanya pembuat atau admin yang dapat mengubah pengumuman ini.");
+  }
+
+  await prisma.pengumuman.update({
+    where: { id },
+    data: { judul, isi, target },
+  });
+
+  revalidatePath("/pengumuman");
+  revalidatePath("/dashboard");
+  return ok("Pengumuman diperbarui.");
+}
+
 async function deletePengumuman(fd: FormData): Promise<ActionState> {
   const u = await currentUser();
   requireRole(u.role, ["ADMIN", "KEPSEK"]);
@@ -718,6 +868,219 @@ async function deletePengumuman(fd: FormData): Promise<ActionState> {
   return ok("Pengumuman berhasil dihapus.");
 }
 
+// ============================================================
+// Kurikulum: CP / TP / ATP, modul ajar, dan kalender akademik
+// ============================================================
+
+function revalidateKurikulum() {
+  revalidatePath("/kurikulum");
+  revalidatePath("/kurikulum/cp-tp-atp");
+  revalidatePath("/kurikulum/modul-ajar");
+  revalidatePath("/kurikulum/kalender");
+  revalidatePath("/kurikulum/monitoring");
+  revalidatePath("/dashboard");
+}
+
+function tanggalAtauNull(value: string): Date | null {
+  if (!value) return null;
+  const d = new Date(value);
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
+async function createCapaian(fd: FormData): Promise<ActionState> {
+  const u = await currentUser();
+  requireRole(u.role, ["ADMIN", "KURIKULUM"]);
+
+  const mapelId = str(fd, "mapelId");
+  const fase = str(fd, "fase").toUpperCase();
+  const deskripsi = str(fd, "deskripsi");
+  if (!mapelId || !fase || !deskripsi) return err("Mapel, fase, dan deskripsi CP wajib diisi.");
+  if (fase.length > 2) return err("Fase tidak valid. Contoh: E atau F.");
+
+  await prisma.capaian.create({ data: { mapelId, fase, deskripsi } });
+  revalidateKurikulum();
+  return ok("Capaian Pembelajaran ditambahkan.");
+}
+
+async function deleteCapaian(fd: FormData): Promise<ActionState> {
+  const u = await currentUser();
+  requireRole(u.role, ["ADMIN", "KURIKULUM"]);
+
+  const gag = await safeDelete(
+    () => prisma.capaian.delete({ where: { id: str(fd, "id") } }),
+    () => "CP masih dipakai TP lain."
+  );
+  if (gag) return gag;
+  revalidateKurikulum();
+  return ok("CP dihapus.");
+}
+
+async function createTujuan(fd: FormData): Promise<ActionState> {
+  const u = await currentUser();
+  requireRole(u.role, ["ADMIN", "KURIKULUM"]);
+
+  const capaianId = str(fd, "capaianId");
+  const deskripsi = str(fd, "deskripsi");
+  const urutan = Number(str(fd, "urutan") || "1");
+  if (!capaianId || !deskripsi) return err("CP dan deskripsi TP wajib diisi.");
+
+  await prisma.tujuan.create({
+    data: { capaianId, deskripsi, urutan: Number.isFinite(urutan) ? urutan : 1 },
+  });
+  revalidateKurikulum();
+  return ok("Tujuan Pembelajaran ditambahkan.");
+}
+
+async function deleteTujuan(fd: FormData): Promise<ActionState> {
+  const u = await currentUser();
+  requireRole(u.role, ["ADMIN", "KURIKULUM"]);
+
+  const gag = await safeDelete(
+    () => prisma.tujuan.delete({ where: { id: str(fd, "id") } }),
+    () => "TP masih dipakai ATP."
+  );
+  if (gag) return gag;
+  revalidateKurikulum();
+  return ok("TP dihapus.");
+}
+
+async function createAtp(fd: FormData): Promise<ActionState> {
+  const u = await currentUser();
+  requireRole(u.role, ["ADMIN", "KURIKULUM"]);
+
+  const tujuanId = str(fd, "tujuanId");
+  const judul = str(fd, "judul");
+  const alokasi = str(fd, "alokasi");
+  const urutan = Number(str(fd, "urutan") || "1");
+  if (!tujuanId || !judul) return err("TP dan judul ATP wajib diisi.");
+
+  await prisma.atp.create({
+    data: {
+      tujuanId,
+      judul,
+      alokasi: alokasi || null,
+      urutan: Number.isFinite(urutan) ? urutan : 1,
+    },
+  });
+  revalidateKurikulum();
+  return ok("ATP ditambahkan.");
+}
+
+async function deleteAtp(fd: FormData): Promise<ActionState> {
+  const u = await currentUser();
+  requireRole(u.role, ["ADMIN", "KURIKULUM"]);
+
+  const gag = await safeDelete(
+    () => prisma.atp.delete({ where: { id: str(fd, "id") } }),
+    () => "ATP tidak bisa dihapus."
+  );
+  if (gag) return gag;
+  revalidateKurikulum();
+  return ok("ATP dihapus.");
+}
+
+async function createModulAjar(fd: FormData): Promise<ActionState> {
+  const u = await currentUser();
+  requireRole(u.role, ["ADMIN", "KURIKULUM"]);
+
+  const judul = str(fd, "judul");
+  const mapelId = str(fd, "mapelId");
+  const kelasId = str(fd, "kelasId");
+  const guruId = str(fd, "guruId");
+  const status = str(fd, "status") || "DRAFT";
+  const file = str(fd, "file");
+  if (!judul || !mapelId || !guruId) return err("Judul, mapel, dan guru wajib diisi.");
+  if (!["DRAFT", "REVIEW", "SELESAI"].includes(status)) return err("Status modul tidak valid.");
+
+  await prisma.modulAjar.create({
+    data: {
+      judul,
+      mapelId,
+      guruId,
+      status,
+      file: file || null,
+      kelasId: kelasId || null,
+    },
+  });
+  revalidateKurikulum();
+  return ok("Modul ajar ditambahkan.");
+}
+
+async function updateModulAjar(fd: FormData): Promise<ActionState> {
+  const u = await currentUser();
+  requireRole(u.role, ["ADMIN", "KURIKULUM"]);
+
+  const id = str(fd, "id");
+  const judul = str(fd, "judul");
+  const mapelId = str(fd, "mapelId");
+  const kelasId = str(fd, "kelasId");
+  const guruId = str(fd, "guruId");
+  const status = str(fd, "status");
+  const file = str(fd, "file");
+  if (!id || !judul || !mapelId || !guruId) return err("Judul, mapel, dan guru wajib diisi.");
+  if (!["DRAFT", "REVIEW", "SELESAI"].includes(status)) return err("Status modul tidak valid.");
+
+  await prisma.modulAjar.update({
+    where: { id },
+    data: {
+      judul,
+      mapelId,
+      guruId,
+      status,
+      file: file || null,
+      kelasId: kelasId || null,
+    },
+  });
+  revalidateKurikulum();
+  return ok("Modul ajar diperbarui.");
+}
+
+async function deleteModulAjar(fd: FormData): Promise<ActionState> {
+  const u = await currentUser();
+  requireRole(u.role, ["ADMIN", "KURIKULUM"]);
+
+  const gag = await safeDelete(
+    () => prisma.modulAjar.delete({ where: { id: str(fd, "id") } }),
+    () => "Modul ajar tidak bisa dihapus."
+  );
+  if (gag) return gag;
+  revalidateKurikulum();
+  return ok("Modul ajar dihapus.");
+}
+
+async function createKalender(fd: FormData): Promise<ActionState> {
+  const u = await currentUser();
+  requireRole(u.role, ["ADMIN", "KURIKULUM"]);
+
+  const judul = str(fd, "judul");
+  const jenis = str(fd, "jenis").toUpperCase();
+  const mulai = tanggalAtauNull(str(fd, "mulai"));
+  const selesai = tanggalAtauNull(str(fd, "selesai"));
+  const keterangan = str(fd, "keterangan");
+  if (!judul || !mulai) return err("Judul dan tanggal mulai wajib diisi.");
+  if (!["KEGIATAN", "UJIAN", "LIBUR", "RAPAT"].includes(jenis)) return err("Jenis agenda tidak valid.");
+  if (selesai && selesai < mulai) return err("Tanggal selesai tidak boleh sebelum tanggal mulai.");
+
+  await prisma.kalenderAkademik.create({
+    data: { judul, jenis, mulai, selesai, keterangan: keterangan || null },
+  });
+  revalidateKurikulum();
+  return ok("Agenda kalender ditambahkan.");
+}
+
+async function deleteKalender(fd: FormData): Promise<ActionState> {
+  const u = await currentUser();
+  requireRole(u.role, ["ADMIN", "KURIKULUM"]);
+
+  const gag = await safeDelete(
+    () => prisma.kalenderAkademik.delete({ where: { id: str(fd, "id") } }),
+    () => "Agenda tidak bisa dihapus."
+  );
+  if (gag) return gag;
+  revalidateKurikulum();
+  return ok("Agenda kalender dihapus.");
+}
+
 export {
   createTugas,
   deleteTugas,
@@ -729,14 +1092,29 @@ export {
   setAbsensi,
   createJadwal,
   deleteJadwal,
+  updateJadwal,
   createMapel,
   deleteMapel,
+  updateMapel,
   createKelas,
   deleteKelas,
+  updateKelas,
   createUser,
   toggleUser,
   deleteUser,
   createPengumuman,
   deletePengumuman,
+  updatePengumuman,
   updatePassword,
+  createCapaian,
+  deleteCapaian,
+  createTujuan,
+  deleteTujuan,
+  createAtp,
+  deleteAtp,
+  createModulAjar,
+  updateModulAjar,
+  deleteModulAjar,
+  createKalender,
+  deleteKalender,
 };

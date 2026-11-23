@@ -77,7 +77,7 @@ function Toasts() {
           key={t.id}
           className={`pointer-events-auto flex w-full max-w-sm items-start gap-2.5 rounded-lg border px-4 py-3 text-sm shadow-lg ${t.kind === "success"
               ? "border-emerald-200 bg-emerald-50 text-emerald-800"
-              : "border-rose-200 bg-rose-50 text-rose-800"
+              : "border-red-200 bg-red-50 text-red-800"
             }`}
         >
           <svg

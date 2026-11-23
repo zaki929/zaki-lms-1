@@ -29,6 +29,7 @@ model User {
   nilai        Nilai[]     @relation("SiswaNilai")
   absensi      Absensi[]
   pengumuman   Pengumuman[]
+  modulAjar    ModulAjar[]
 }
 
 model Kelas {
@@ -44,6 +45,7 @@ model Kelas {
   mapel   Mapel[]
   jadwal  Jadwal[]
   tugas   Tugas[]
+  modulAjar ModulAjar[]
 }
 
 model Mapel {
@@ -56,6 +58,8 @@ model Mapel {
   kelas Kelas[]
   jadwal Jadwal[]
   tugas Tugas[]
+  capaian Capaian[]
+  modulAjar ModulAjar[]
 }
 
 model Jadwal {
@@ -139,4 +143,60 @@ model Pengumuman {
 
   authorId String
   author   User @relation(fields: [authorId], references: [id])
+}
+
+/// Capaian Pembelajaran (CP) per mata pelajaran & fase.
+model Capaian {
+  id        String @id @default(cuid())
+  fase      String // A | B | C | D | E | F
+  deskripsi String
+  mapelId   String
+  mapel     Mapel @relation(fields: [mapelId], references: [id], onDelete: Cascade)
+  tujuan    Tujuan[]
+}
+
+/// Tujuan Pembelajaran (TP) di bawah satu CP.
+model Tujuan {
+  id        String @id @default(cuid())
+  deskripsi String
+  urutan    Int    @default(1)
+  capaianId String
+  capaian   Capaian @relation(fields: [capaianId], references: [id], onDelete: Cascade)
+  atp       Atp[]
+}
+
+/// Alur Tujuan Pembelajaran (ATP) di bawah satu TP.
+model Atp {
+  id       String  @id @default(cuid())
+  judul    String
+  alokasi  String?
+  urutan   Int     @default(1)
+  tujuanId String
+  tujuan   Tujuan @relation(fields: [tujuanId], references: [id], onDelete: Cascade)
+}
+
+/// Modul ajar / perangkat pembelajaran yang disusun guru.
+model ModulAjar {
+  id        String   @id @default(cuid())
+  judul     String
+  status    String   @default("DRAFT") // DRAFT | REVIEW | SELESAI
+  file      String?
+  dibuatPada DateTime @default(now())
+
+  mapelId String
+  kelasId String?
+  guruId  String
+  mapel   Mapel @relation(fields: [mapelId], references: [id], onDelete: Cascade)
+  kelas   Kelas? @relation(fields: [kelasId], references: [id], onDelete: SetNull)
+  guru    User  @relation(fields: [guruId], references: [id], onDelete: Cascade)
+}
+
+/// Agenda kalender akademik sekolah.
+model KalenderAkademik {
+  id         String    @id @default(cuid())
+  judul      String
+  jenis      String    // KEGIATAN | UJIAN | LIBUR | RAPAT
+  mulai      DateTime
+  selesai    DateTime?
+  keterangan String?
 }

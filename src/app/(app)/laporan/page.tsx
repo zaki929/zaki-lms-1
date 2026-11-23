@@ -49,10 +49,10 @@ export default async function LaporanPage() {
       <PageHeader title="Laporan & Statistik" desc="Rekap data seluruh sekolah." />
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard label="Rata-rata Nilai" value={rataSekolah} accent="bg-indigo-500" />
+        <StatCard label="Rata-rata Nilai" value={rataSekolah} accent="bg-blue-500" />
         <StatCard label="Kehadiran" value={`${persenHadir}%`} accent="bg-emerald-500" />
         <StatCard label="Jumlah Siswa" value={perSiswa.length} accent="bg-amber-500" />
-        <StatCard label="Jumlah Kelas" value={perKelas.length} accent="bg-violet-500" />
+        <StatCard label="Jumlah Kelas" value={perKelas.length} accent="bg-slate-500" />
       </div>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-2">

@@ -4,5 +4,5 @@
  * tidak bisa memakai fallback berbeda.
  */
 export const sessionSecret = new TextEncoder().encode(
-  process.env.SESSION_SECRET ?? "citra-negara-zaki-lms-secret-change-in-production-123456"
+  process.env.SESSION_SECRET ?? "citra-negara-mantap-lms-secret-change-in-production-123456"
 );

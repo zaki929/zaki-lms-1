@@ -3,7 +3,7 @@
 import { useActionState, useEffect, useState } from "react";
 import { useFormStatus } from "react-dom";
 import type { ActionState } from "@/app/actions";
-import { gradePengumpulan, updateNilai } from "@/app/actions";
+import { gradePengumpulan, updateNilai, updateJadwal, updateKelas, updateMapel, updatePengumuman } from "@/app/actions";
 import { toastFromState } from "@/components/toast";
 
 type Action = (formData: FormData) => Promise<ActionState | void> | ActionState | void;
@@ -15,7 +15,7 @@ export function SubmitButton({ label = "Simpan" }: { label?: string }) {
       type="submit"
       disabled={pending}
       aria-busy={pending}
-      className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
+      className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
     >
       {pending && <Spinner />}
       {pending ? "Memproses..." : label}
@@ -36,7 +36,7 @@ export function DeleteButton({ label = "Hapus", tone = "danger" }: { label?: str
   const { pending } = useFormStatus();
   const style =
     tone === "danger"
-      ? "border-rose-200 bg-white text-rose-600 hover:bg-rose-50"
+      ? "border-red-200 bg-white text-red-600 hover:bg-red-50"
       : "border-slate-300 bg-white text-slate-600 hover:bg-slate-100";
   return (
     <button
@@ -51,7 +51,7 @@ export function DeleteButton({ label = "Hapus", tone = "danger" }: { label?: str
 }
 
 const inputCls =
-  "mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 disabled:bg-slate-50 disabled:text-slate-400";
+  "mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:bg-slate-50 disabled:text-slate-400";
 
 /** id unik per field supaya <label htmlFor> selalu menunjuk ke input yang benar. */
 let uid = 0;
@@ -93,7 +93,7 @@ export function Field({
       <label htmlFor={id} className="block text-sm font-medium text-slate-700">
         {label}
         {required && (
-          <span className="ml-0.5 text-rose-500" aria-hidden="true">
+          <span className="ml-0.5 text-red-500" aria-hidden="true">
             *
           </span>
         )}
@@ -140,6 +140,7 @@ export function TextArea({
   rows = 3,
   placeholder,
   hint,
+  defaultValue,
 }: {
   label: string;
   name: string;
@@ -147,6 +148,7 @@ export function TextArea({
   rows?: number;
   placeholder?: string;
   hint?: string;
+  defaultValue?: string;
 }) {
   const id = fieldId(name);
   return (
@@ -154,20 +156,26 @@ export function TextArea({
       <label htmlFor={id} className="block text-sm font-medium text-slate-700">
         {label}
         {required && (
-          <span className="ml-0.5 text-rose-500" aria-hidden="true">
-            *
+          <span aria-hidden="true" className="text-red-500">
+            {" "}*
           </span>
         )}
       </label>
       <textarea
         id={id}
         name={name}
-        rows={rows}
         required={required}
+        rows={rows}
         placeholder={placeholder}
-        className={inputCls}
+        defaultValue={defaultValue}
+        aria-describedby={hint ? `${id}-hint` : undefined}
+        className="mt-1 block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
       />
-      {hint && <p className="mt-1 text-xs text-slate-400">{hint}</p>}
+      {hint && (
+        <p id={`${id}-hint`} className="mt-1 text-xs text-slate-500">
+          {hint}
+        </p>
+      )}
     </div>
   );
 }
@@ -177,11 +185,13 @@ export function MultiSelect({
   name,
   options,
   hint,
+  defaultValue,
 }: {
   label: string;
   name: string;
   options: { value: string; label: string }[];
   hint?: string;
+  defaultValue?: string[];
 }) {
   const id = fieldId(name);
   return (
@@ -193,6 +203,7 @@ export function MultiSelect({
         id={id}
         name={name}
         multiple
+        defaultValue={defaultValue}
         size={Math.min(6, Math.max(3, options.length))}
         className={inputCls}
       >
@@ -249,7 +260,7 @@ export function ActionForm({
       {state?.error && (
         <p
           role="alert"
-          className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700"
+          className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"
         >
           {state.error}
         </p>
@@ -305,7 +316,7 @@ export function GradeForm({
           step={0.1}
           defaultValue={defaultNilai ?? ""}
           placeholder="-"
-          className="mt-0.5 w-full rounded-md border border-slate-300 bg-white px-2 py-1 text-xs outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+          className="mt-0.5 w-full rounded-md border border-slate-300 bg-white px-2 py-1 text-xs outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
         />
       </div>
       <div className="min-w-[8rem] flex-1">
@@ -320,16 +331,16 @@ export function GradeForm({
           name="catatan"
           defaultValue={defaultCatatan ?? ""}
           placeholder="Catatan untuk siswa"
-          className="mt-0.5 w-full rounded-md border border-slate-300 bg-white px-2 py-1 text-xs outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+          className="mt-0.5 w-full rounded-md border border-slate-300 bg-white px-2 py-1 text-xs outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
         />
       </div>
       <button
         type="submit"
-        className="rounded-md border border-indigo-200 bg-white px-2.5 py-1 text-xs font-medium text-indigo-600 transition hover:bg-indigo-50"
+        className="rounded-md border border-blue-200 bg-white px-2.5 py-1 text-xs font-medium text-blue-600 transition hover:bg-blue-50"
       >
         Simpan
       </button>
-      {state?.error && <span className="text-xs text-rose-600">{state.error}</span>}
+      {state?.error && <span className="text-xs text-red-600">{state.error}</span>}
     </form>
   );
 }
@@ -392,7 +403,7 @@ export function EditNilaiForm({
           required
           value={nilai}
           onChange={(e) => setNilai(e.target.value)}
-          className="mt-0.5 w-full rounded-md border border-slate-300 bg-white px-2 py-1 text-xs outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+          className="mt-0.5 w-full rounded-md border border-slate-300 bg-white px-2 py-1 text-xs outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
         />
       </div>
       <div className="min-w-[7rem] flex-1">
@@ -404,12 +415,12 @@ export function EditNilaiForm({
           name="catatan"
           defaultValue={defaultCatatan ?? ""}
           placeholder="Catatan siswa"
-          className="mt-0.5 w-full rounded-md border border-slate-300 bg-white px-2 py-1 text-xs outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+          className="mt-0.5 w-full rounded-md border border-slate-300 bg-white px-2 py-1 text-xs outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
         />
       </div>
       <button
         type="submit"
-        className="rounded-md bg-indigo-600 px-2.5 py-1 text-xs font-medium text-white transition hover:bg-indigo-700"
+        className="rounded-md bg-blue-600 px-2.5 py-1 text-xs font-medium text-white transition hover:bg-blue-700"
       >
         Simpan
       </button>
@@ -420,7 +431,7 @@ export function EditNilaiForm({
       >
         Batal
       </button>
-      {state?.error && <span className="text-xs text-rose-600">{state.error}</span>}
+      {state?.error && <span className="text-xs text-red-600">{state.error}</span>}
     </form>
   );
 }
@@ -451,5 +462,202 @@ export function DeleteForm({
           <td> justru merusak layout tabel. */}
       <DeleteButton label={label} />
     </form>
+  );
+}
+/**
+ * Form edit inline generik untuk data sederhana.
+ * Dipakai oleh Kelas, Mapel, Jadwal, Pengumuman.
+ */
+export function EditPengumumanForm({
+  pengumuman,
+}: {
+  pengumuman: { id: string; judul: string; isi: string; target: string };
+}) {
+  const [state, formAction] = useFormAction(updatePengumuman);
+  const [buka, setBuka] = useState(false);
+
+  useEffect(() => {
+    if (buka && state?.success) setBuka(false);
+  }, [buka, state?.success]);
+
+  if (!buka) {
+    return (
+      <button
+        type="button"
+        onClick={() => setBuka(true)}
+        className="whitespace-nowrap rounded-md border border-slate-300 bg-white px-2.5 py-1 text-xs font-medium text-slate-600 transition hover:bg-slate-100"
+      >
+        Ubah
+      </button>
+    );
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+      <div className="w-full max-w-md rounded-xl bg-white p-5 shadow-xl">
+        <h3 className="text-sm font-semibold text-slate-800">Ubah Pengumuman</h3>
+        <form action={formAction} className="mt-3 space-y-3">
+          <input type="hidden" name="id" value={pengumuman.id} />
+          <Field label="Judul" name="judul" required defaultValue={pengumuman.judul} />
+          <TextArea label="Isi Pengumuman" name="isi" required rows={4} defaultValue={pengumuman.isi} />
+          <Field
+            label="Ditujukan Untuk"
+            name="target"
+            required
+            defaultValue={pengumuman.target}
+            options={[
+              { value: "SEMUA", label: "Semua User" },
+              { value: "GURU", label: "Guru" },
+              { value: "SISWA", label: "Siswa" },
+              { value: "KEPSEK", label: "Kepala Sekolah" },
+              { value: "KURIKULUM", label: "Kurikulum" },
+            ]}
+          />
+          <div className="flex justify-end gap-2 pt-2">
+            <button type="button" onClick={() => setBuka(false)} className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-100">Batal</button>
+            <button type="submit" className="rounded-md bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700">Simpan</button>
+          </div>
+          {state?.error && <p className="text-xs text-red-600">{state.error}</p>}
+        </form>
+      </div>
+    </div>
+  );
+}
+
+export function EditJadwalForm({
+  jadwal,
+  allKelas,
+  allMapel,
+}: {
+  jadwal: { id: string; hari: string; jamMulai: string; jamSelesai: string; ruangan?: string | null; kelasId: string; mapelId: string };
+  allKelas: { id: string; nama: string }[];
+  allMapel: { id: string; nama: string }[];
+}) {
+  const [state, formAction] = useFormAction(updateJadwal);
+  const [buka, setBuka] = useState(false);
+  const HARI = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
+
+  useEffect(() => {
+    if (buka && state?.success) setBuka(false);
+  }, [buka, state?.success]);
+
+  if (!buka) {
+    return (
+      <button type="button" onClick={() => setBuka(true)} className="whitespace-nowrap rounded-md border border-slate-300 bg-white px-2.5 py-1 text-xs font-medium text-slate-600 transition hover:bg-slate-100">
+        Ubah
+      </button>
+    );
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+      <div className="w-full max-w-md rounded-xl bg-white p-5 shadow-xl">
+        <h3 className="text-sm font-semibold text-slate-800">Ubah Jadwal</h3>
+        <form action={formAction} className="mt-3 space-y-3">
+          <input type="hidden" name="id" value={jadwal.id} />
+          <Field label="Hari" name="hari" required defaultValue={jadwal.hari} options={HARI.map((h) => ({ value: h, label: h }))} />
+          <Field label="Jam Mulai" name="jamMulai" type="time" required defaultValue={jadwal.jamMulai} />
+          <Field label="Jam Selesai" name="jamSelesai" type="time" required defaultValue={jadwal.jamSelesai} />
+          <Field label="Ruangan" name="ruangan" defaultValue={jadwal.ruangan ?? ""} />
+          <Field label="Kelas" name="kelasId" required defaultValue={jadwal.kelasId} options={allKelas.map((k) => ({ value: k.id, label: k.nama }))} />
+          <Field label="Mata Pelajaran" name="mapelId" required defaultValue={jadwal.mapelId} options={allMapel.map((m) => ({ value: m.id, label: m.nama }))} />
+          <div className="flex justify-end gap-2 pt-2">
+            <button type="button" onClick={() => setBuka(false)} className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-100">Batal</button>
+            <button type="submit" className="rounded-md bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700">Simpan</button>
+          </div>
+          {state?.error && <p className="text-xs text-red-600">{state.error}</p>}
+        </form>
+      </div>
+    </div>
+  );
+}
+
+export function EditMapelForm({
+  mapel,
+  allKelas,
+}: {
+  mapel: { id: string; nama: string; kode: string; deskripsi?: string | null; kelas: { id: string }[] };
+  allKelas: { id: string; nama: string }[];
+}) {
+  const [state, formAction] = useFormAction(updateMapel);
+  const [buka, setBuka] = useState(false);
+
+  useEffect(() => {
+    if (buka && state?.success) setBuka(false);
+  }, [buka, state?.success]);
+
+  if (!buka) {
+    return (
+      <button type="button" onClick={() => setBuka(true)} className="whitespace-nowrap rounded-md border border-slate-300 bg-white px-2.5 py-1 text-xs font-medium text-slate-600 transition hover:bg-slate-100">
+        Ubah
+      </button>
+    );
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+      <div className="w-full max-w-md rounded-xl bg-white p-5 shadow-xl">
+        <h3 className="text-sm font-semibold text-slate-800">Ubah Mata Pelajaran</h3>
+        <form action={formAction} className="mt-3 space-y-3">
+          <input type="hidden" name="id" value={mapel.id} />
+          <Field label="Nama Mapel" name="nama" required defaultValue={mapel.nama} />
+          <Field label="Kode" name="kode" required defaultValue={mapel.kode} hint="Kode unik, otomatis jadi huruf besar." />
+          <TextArea label="Deskripsi" name="deskripsi" defaultValue={mapel.deskripsi ?? ""} />
+          <MultiSelect label="Kelas" name="kelasId" options={allKelas.map((k) => ({ value: k.id, label: k.nama }))} defaultValue={mapel.kelas.map((k) => k.id)} />
+          <div className="flex justify-end gap-2 pt-2">
+            <button type="button" onClick={() => setBuka(false)} className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-100">Batal</button>
+            <button type="submit" className="rounded-md bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700">Simpan</button>
+          </div>
+          {state?.error && <p className="text-xs text-red-600">{state.error}</p>}
+        </form>
+      </div>
+    </div>
+  );
+}
+
+export function EditKelasForm({
+  kelas,
+  allGuru,
+  allSiswa,
+}: {
+  kelas: { id: string; nama: string; tingkat: string; tahun: string; wali?: string | null; guruId?: string | null; siswa: { id: string }[] };
+  allGuru: { id: string; name: string }[];
+  allSiswa: { id: string; name: string; nis: string | null }[];
+}) {
+  const [state, formAction] = useFormAction(updateKelas);
+  const [buka, setBuka] = useState(false);
+
+  useEffect(() => {
+    if (buka && state?.success) setBuka(false);
+  }, [buka, state?.success]);
+
+  if (!buka) {
+    return (
+      <button type="button" onClick={() => setBuka(true)} className="whitespace-nowrap rounded-md border border-slate-300 bg-white px-2.5 py-1 text-xs font-medium text-slate-600 transition hover:bg-slate-100">
+        Ubah
+      </button>
+    );
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+      <div className="w-full max-w-md max-h-[90vh] overflow-y-auto rounded-xl bg-white p-5 shadow-xl">
+        <h3 className="text-sm font-semibold text-slate-800">Ubah Kelas</h3>
+        <form action={formAction} className="mt-3 space-y-3">
+          <input type="hidden" name="id" value={kelas.id} />
+          <Field label="Nama Kelas" name="nama" required defaultValue={kelas.nama} />
+          <Field label="Tingkat" name="tingkat" required defaultValue={kelas.tingkat} options={["X", "XI", "XII"].map((t) => ({ value: t, label: t }))} />
+          <Field label="Tahun Ajaran" name="tahun" required defaultValue={kelas.tahun} />
+          <Field label="Wali Kelas" name="wali" defaultValue={kelas.wali ?? ""} />
+          <Field label="Guru Pengampu" name="guruId" defaultValue={kelas.guruId ?? ""} options={allGuru.map((g) => ({ value: g.id, label: g.name }))} />
+          <MultiSelect label="Anggota Siswa" name="siswaId" options={allSiswa.map((s) => ({ value: s.id, label: `${s.name} (${s.nis ?? "-"})` }))} defaultValue={kelas.siswa.map((s) => s.id)} />
+          <div className="flex justify-end gap-2 pt-2">
+            <button type="button" onClick={() => setBuka(false)} className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-100">Batal</button>
+            <button type="submit" className="rounded-md bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700">Simpan</button>
+          </div>
+          {state?.error && <p className="text-xs text-red-600">{state.error}</p>}
+        </form>
+      </div>
+    </div>
   );
 }

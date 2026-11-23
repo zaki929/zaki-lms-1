@@ -127,7 +127,7 @@ foreach ($a in $accounts) {
 $checks++
 try {
   $l = Invoke-WebRequest "$base/" -UseBasicParsing -TimeoutSec 30
-  if ($l.StatusCode -eq 200 -and $l.Content -match "Citra Negara Zaki LMS") {
+  if ($l.StatusCode -eq 200 -and $l.Content -match "Citra Negara MANTAP LMS") {
     Write-Output "OK   landing page publik"
   } else {
     $errors++

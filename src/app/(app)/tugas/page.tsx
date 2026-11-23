@@ -95,7 +95,7 @@ export default async function TugasPage() {
                     <div className="min-w-0">
                       <h3 className="text-base font-semibold text-slate-800">{t.judul}</h3>
                       <p className="mt-0.5 text-xs text-slate-500">
-                        {t.kelas.nama} • {t.mapel.nama} • Guru: {t.guru.name}
+                        {t.kelas.nama} &bull; {t.mapel.nama} &bull; Guru: {t.guru.name}
                       </p>
                     </div>
                     <div className="flex shrink-0 items-center gap-2">
@@ -126,7 +126,7 @@ export default async function TugasPage() {
                       href={t.lampiran}
                       target="_blank"
                       rel="noreferrer noopener"
-                      className="mt-2 inline-flex items-center gap-1.5 text-sm font-medium text-indigo-600 hover:underline"
+                      className="mt-2 inline-flex items-center gap-1.5 text-sm font-medium text-blue-600 hover:underline"
                     >
                       <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                         <path d="M10 13a5 5 0 007.5.5l3-3a5 5 0 00-7-7l-1.7 1.7" />
@@ -138,7 +138,7 @@ export default async function TugasPage() {
                   <p className="mt-2 text-xs text-slate-500">
                     Deadline: {fmtDeadline(t.deadline)}
                     {lewat && !sudah && (
-                      <span className="ml-2 font-medium text-rose-600">sudah lewat</span>
+                      <span className="ml-2 font-medium text-red-600">sudah lewat</span>
                     )}
                   </p>
 
@@ -147,20 +147,20 @@ export default async function TugasPage() {
                       {sudah && (
                         <div className="mb-3 space-y-2">
                           <p className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
-                            Terkirim: {t.pengumpulan[0].file ?? "tanpa file"} •{" "}
+                            Terkirim: {t.pengumpulan[0].file ?? "tanpa file"} &bull;{" "}
                             {fmtDateTime(t.pengumpulan[0].submitPada)}
                           </p>
                           {t.pengumpulan[0].nilaiAkhir !== null && (
-                            <div className="flex flex-wrap items-center gap-2 rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2">
-                              <span className="text-sm font-medium text-indigo-900">
+                            <div className="flex flex-wrap items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2">
+                              <span className="text-sm font-medium text-blue-900">
                                 Nilai dari guru:
                               </span>
                               <Badge tone={PRED_TONE[predikat(t.pengumpulan[0].nilaiAkhir)]}>
                                 {t.pengumpulan[0].nilaiAkhir} · {predikat(t.pengumpulan[0].nilaiAkhir)}
                               </Badge>
                               {t.pengumpulan[0].catatan && (
-                                <span className="text-sm text-indigo-700">
-                                  — {t.pengumpulan[0].catatan}
+                                <span className="text-sm text-blue-700">
+                                  &mdash; {t.pengumpulan[0].catatan}
                                 </span>
                               )}
                             </div>
@@ -196,7 +196,7 @@ export default async function TugasPage() {
                           >
                             <div className="flex flex-wrap items-center justify-between gap-2">
                               <p className="text-sm text-slate-700">
-                                <span className="font-medium">{p.siswa.name}</span> — {p.file ?? "tanpa file"}
+                                <span className="font-medium">{p.siswa.name}</span> &mdash; {p.file ?? "tanpa file"}
                                 <span className="ml-1 text-xs text-slate-400">
                                   ({fmtDateTime(p.submitPada)})
                                 </span>

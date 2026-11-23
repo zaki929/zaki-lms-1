@@ -2,7 +2,7 @@ import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/guard";
 import { Badge, Card, EmptyState, PageHeader } from "@/components/ui";
-import { ActionForm, DeleteForm, Field } from "@/components/forms";
+import { ActionForm, DeleteForm, EditJadwalForm, Field } from "@/components/forms";
 import { createJadwal, deleteJadwal } from "@/app/actions";
 
 const HARI = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
@@ -55,7 +55,7 @@ export default async function JadwalPage() {
                 <Card
                   key={h}
                   title={h}
-                  className={ini ? "border-indigo-300 ring-1 ring-indigo-100" : ""}
+                  className={ini ? "border-blue-300 ring-1 ring-blue-100" : ""}
                   action={ini ? <Badge tone="blue">Hari ini</Badge> : undefined}
                 >
                   <ul className="space-y-2">
@@ -67,16 +67,18 @@ export default async function JadwalPage() {
                         <div className="min-w-0">
                           <p className="text-sm font-medium text-slate-800">{j.mapel.nama}</p>
                           <p className="text-xs text-slate-500">
-                            {j.jamMulai} – {j.jamSelesai} • {j.kelas.nama} • R.{" "}
-                            {j.ruangan ?? "-"}
+                            {j.jamMulai}&ndash;{j.jamSelesai} &bull; {j.kelas.nama} &bull; R. {j.ruangan ?? "-"}
                           </p>
                         </div>
                         {canManage && (
-                          <DeleteForm
-                            action={deleteJadwal}
-                            id={j.id}
-                            confirm={`Hapus jadwal ${j.mapel.nama} hari ${h}?`}
-                          />
+                          <div className="flex shrink-0 items-center gap-2">
+                            <EditJadwalForm jadwal={j} allKelas={kelas} allMapel={mapel} />
+                            <DeleteForm
+                              action={deleteJadwal}
+                              id={j.id}
+                              confirm={`Hapus jadwal ${j.mapel.nama} hari ${h}?`}
+                            />
+                          </div>
                         )}
                       </li>
                     ))}

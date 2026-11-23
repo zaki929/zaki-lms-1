@@ -2,7 +2,7 @@ import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/guard";
 import { Badge, Card, EmptyState, PageHeader } from "@/components/ui";
-import { ActionForm, DeleteForm, Field, MultiSelect } from "@/components/forms";
+import { ActionForm, DeleteForm, EditKelasForm, Field, MultiSelect } from "@/components/forms";
 import { createKelas, deleteKelas } from "@/app/actions";
 
 export default async function KelasPage() {
@@ -59,11 +59,14 @@ export default async function KelasPage() {
                     </p>
                   </div>
                   {isAdmin && (
-                    <DeleteForm
-                      action={deleteKelas}
-                      id={k.id}
-                      confirm={`Hapus kelas ${k.nama}? Semua tugas dan jadwal kelas ini ikut terhapus.`}
-                    />
+                    <div className="flex shrink-0 items-center gap-2">
+                      <EditKelasForm kelas={k} allGuru={guru} allSiswa={siswa} />
+                      <DeleteForm
+                        action={deleteKelas}
+                        id={k.id}
+                        confirm={`Hapus kelas ${k.nama}? Semua tugas dan jadwal kelas ini ikut terhapus.`}
+                      />
+                    </div>
                   )}
                 </div>
 

@@ -1,9 +1,12 @@
 import Link from "next/link";
 import { getSession } from "@/lib/auth";
-import { prisma, ROLE_LABEL } from "@/lib/prisma";
+import { prisma } from "@/lib/prisma";
 import { PRED_TONE, predikat } from "@/lib/grading";
-import { Badge, Card, EmptyState, StatCard } from "@/components/ui";
+import { Badge, Card, EmptyState, PageHeader, StatCard } from "@/components/ui";
 import { requireRole } from "@/lib/guard";
+import { redirect } from "next/navigation";
+import { AdminDashboard } from "./admin-dashboard";
+import { KepsekDashboard } from "./kepsek-dashboard";
 
 function fmt(d: Date) {
   return d.toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" });
@@ -14,6 +17,11 @@ export default async function DashboardPage() {
   if (!user) return null;
   requireRole(user.role, ["ADMIN", "GURU", "SISWA", "KEPSEK", "KURIKULUM"]);
 
+  if (user.role === "ADMIN") return <AdminDashboard user={user} />;
+  if (user.role === "KEPSEK") return <KepsekDashboard user={user} />;
+  if (user.role === "KURIKULUM") redirect("/kurikulum");
+
+
   const isGuru = user.role === "GURU";
   const isSiswa = user.role === "SISWA";
 
@@ -22,16 +30,12 @@ export default async function DashboardPage() {
     totalKelas,
     totalMapel,
     totalSiswa,
-    tugasAktif,
-    guruAktif,
     pengumuman,
   ] = await Promise.all([
     prisma.user.count(),
     prisma.kelas.count(),
     prisma.mapel.count(),
     prisma.user.count({ where: { role: "SISWA" } }),
-    prisma.tugas.count({ where: { deadline: { gte: new Date() } } }),
-    prisma.user.count({ where: { role: "GURU", active: true } }),
     prisma.pengumuman.findMany({
       where: { target: "SEMUA" },
       orderBy: { dibuatPada: "desc" },
@@ -79,29 +83,29 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-800">
-          Halo, {user.name.split(",")[0]} 👋
-        </h1>
-        <p className="text-sm text-slate-500">
-          Anda login sebagai <span className="font-semibold">{ROLE_LABEL[user.role]}</span>
-        </p>
-      </div>
+      <PageHeader
+        title={`Selamat datang, ${user.name.split(",")[0]}`}
+        desc={
+          isSiswa
+            ? "Pantau tugas, nilai, dan kehadiran Anda di satu tempat."
+            : "Ringkasan tugas dan aktivitas mengajar Anda."
+        }
+      />
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {isSiswa ? (
           <>
-            <StatCard label="Tugas Assigned" value={tugas.length} accent="bg-indigo-500" />
+            <StatCard label="Tugas Assigned" value={tugas.length} accent="bg-blue-500" />
             <StatCard label="Sudah Dikumpulkan" value={tugas.filter(sudahDikumpulkan).length} accent="bg-emerald-500" />
             <StatCard label="Rata-rata Nilai" value={rata} accent="bg-amber-500" />
             <StatCard label="Hadir (10 hari)" value={absensi.filter((a) => a.status === "HADIR").length} accent="bg-sky-500" />
           </>
         ) : (
           <>
-            <StatCard label="Total Pengguna" value={totalUser} accent="bg-indigo-500" hint="semua role" />
+            <StatCard label="Total Pengguna" value={totalUser} accent="bg-blue-500" hint="semua role" />
             <StatCard label="Total Siswa" value={totalSiswa} accent="bg-emerald-500" />
             <StatCard label="Kelas" value={totalKelas} accent="bg-amber-500" />
-            <StatCard label="Mata Pelajaran" value={totalMapel} accent="bg-violet-500" />
+            <StatCard label="Mata Pelajaran" value={totalMapel} accent="bg-slate-500" />
           </>
         )}
       </div>
@@ -111,7 +115,7 @@ export default async function DashboardPage() {
           <Card
             title={isGuru ? "Tugas yang Saya Buat" : isSiswa ? "Tugas Saya" : "Tugas Terakhir"}
             action={
-              <Link href="/tugas" className="text-xs font-medium text-indigo-600 hover:underline">
+              <Link href="/tugas" className="text-xs font-semibold text-blue-600 hover:underline">
                 Kelola tugas
               </Link>
             }
@@ -128,7 +132,7 @@ export default async function DashboardPage() {
                       <div className="min-w-0">
                         <p className="truncate text-sm font-medium text-slate-800">{t.judul}</p>
                         <p className="text-xs text-slate-500">
-                          {t.kelas.nama} • {t.mapel.nama} • deadline {fmt(t.deadline)}
+                          {t.kelas.nama} &bull; {t.mapel.nama} &bull; deadline {fmt(t.deadline)}
                         </p>
                       </div>
                       {done ? (
@@ -152,7 +156,7 @@ export default async function DashboardPage() {
               ) : (
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b text-left text-xs uppercase text-slate-400">
+                    <tr className="border-b text-left text-[11px] font-semibold uppercase tracking-wide text-slate-500">
                       <th className="py-2">Jenis</th>
                       <th className="py-2">Semester</th>
                       <th className="py-2 text-right">Nilai</th>
@@ -164,7 +168,7 @@ export default async function DashboardPage() {
 <tr key={n.id}>
                       <td className="py-2">{n.tipe}</td>
                       <td className="py-2">{n.semester}</td>
-                      <td className="py-2 text-right font-semibold">{n.nilai}</td>
+                      <td className="py-2 text-right font-semibold tabular-nums text-slate-900">{n.nilai}</td>
                       <td className="py-2 pr-3 text-right">
                         <Badge tone={PRED_TONE[predikat(n.nilai)]}>
                           {predikat(n.nilai)}
@@ -242,57 +246,8 @@ export default async function DashboardPage() {
               )}
             </Card>
           )}
-
-          {user.role === "KEPSEK" && (
-            <Card title="Ringkasan Sekolah">
-              <ul className="space-y-2 text-sm text-slate-600">
-                <li>Tugas aktif: <b>{tugasAktif}</b></li>
-                <li>Guru aktif: <b>{guruAktif}</b></li>
-                <li>Kelas aktif: <b>{totalKelas}</b></li>
-              </ul>
-              <Link
-                href="/laporan"
-                className="mt-3 inline-block text-xs font-medium text-indigo-600 hover:underline"
-              >
-                Lihat laporan lengkap &rarr;
-              </Link>
-            </Card>
-          )}
-
-          {user.role === "KURIKULUM" && (
-            <Card title="Tugas Kurikulum">
-              <ul className="space-y-2 text-sm text-slate-600">
-                <li>Total KKTP/modul: <b>{totalMapel}</b></li>
-                <li>Kelas terdaftar: <b>{totalKelas}</b></li>
-              </ul>
-              <Link href="/mapel" className="mt-3 inline-block text-xs font-medium text-indigo-600 hover:underline">
-                Kelola mata pelajaran &rarr;
-              </Link>
-            </Card>
-          )}
-
-          {user.role === "ADMIN" && (
-            <Card title="Menu Admin">
-              <ul className="space-y-2 text-sm">
-                <li>
-                  <Link href="/pengguna" className="text-indigo-600 hover:underline">
-                    → Manajemen Pengguna
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/kelas" className="text-indigo-600 hover:underline">
-                    → Manajemen Kelas
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/pengumuman" className="text-indigo-600 hover:underline">
-                    → Kirim Pengumuman
-                  </Link>
-                </li>
-              </ul>
-            </Card>
-          )}
         </div>
+
       </div>
     </div>
   );

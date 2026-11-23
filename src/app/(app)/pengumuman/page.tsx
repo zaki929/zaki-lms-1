@@ -2,7 +2,7 @@ import { getSession } from "@/lib/auth";
 import { prisma, ROLE_LABEL, type Role } from "@/lib/prisma";
 import { requireRole } from "@/lib/guard";
 import { Badge, Card, EmptyState, PageHeader } from "@/components/ui";
-import { ActionForm, DeleteForm, Field, TextArea } from "@/components/forms";
+import { ActionForm, DeleteForm, EditPengumumanForm, Field, TextArea } from "@/components/forms";
 import { createPengumuman, deletePengumuman } from "@/app/actions";
 
 function fmt(d: Date) {
@@ -56,11 +56,21 @@ export default async function PengumumanPage() {
                       {p.target === "SEMUA" ? "Semua User" : ROLE_LABEL[p.target as Role] ?? p.target}
                     </Badge>
                     {(user.role === "ADMIN" || p.authorId === user.id) && (
-                      <DeleteForm
-                        action={deletePengumuman}
-                        id={p.id}
-                        confirm={`Hapus pengumuman "${p.judul}"?`}
-                      />
+                      <>
+                        <EditPengumumanForm
+                          pengumuman={{
+                            id: p.id,
+                            judul: p.judul,
+                            isi: p.isi,
+                            target: p.target,
+                          }}
+                        />
+                        <DeleteForm
+                          action={deletePengumuman}
+                          id={p.id}
+                          confirm={`Hapus pengumuman "${p.judul}"?`}
+                        />
+                      </>
                     )}
                   </div>
                 </div>

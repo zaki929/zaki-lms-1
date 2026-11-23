@@ -16,6 +16,7 @@ export const NAV_ITEMS: NavItem[] = [
   { href: "/kelas", label: "Data Kelas", icon: "School", roles: ["ADMIN", "GURU", "SISWA", "KEPSEK", "KURIKULUM"] },
   { href: "/mapel", label: "Mata Pelajaran", icon: "BookOpen", roles: ["ADMIN", "GURU", "KEPSEK", "KURIKULUM"] },
   { href: "/pengguna", label: "Manajemen Pengguna", icon: "Users", roles: ["ADMIN", "KEPSEK"] },
+  { href: "/kurikulum", label: "Manajemen Kurikulum", icon: "Library", roles: ["ADMIN", "KEPSEK", "KURIKULUM"] },
   { href: "/laporan", label: "Laporan & Statistik", icon: "BarChart3", roles: ["ADMIN", "KEPSEK", "KURIKULUM"] },
   { href: "/pengumuman", label: "Pengumuman", icon: "Megaphone", roles: ["ADMIN", "GURU", "SISWA", "KEPSEK", "KURIKULUM"] },
   { href: "/profil", label: "Profil Saya", icon: "UserCircle", roles: ["ADMIN", "GURU", "SISWA", "KEPSEK", "KURIKULUM"] },

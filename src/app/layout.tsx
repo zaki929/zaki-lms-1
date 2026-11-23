@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   },
   description: BRAND.description,
   applicationName: BRAND.name,
-  keywords: ["LMS", "sekolah", "e-learning", "Citra Negara Zaki", "manajemen sekolah"],
+  keywords: ["LMS", "sekolah", "e-learning", "Citra Negara", "SMK Citra Negara", "MANTAP", "manajemen sekolah"],
   openGraph: {
     title: `${BRAND.name} — ${BRAND.tagline}`,
     description: `${BRAND.slogan} ${BRAND.description}`,

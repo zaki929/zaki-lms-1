@@ -102,7 +102,7 @@ export default async function ProfilPage() {
           <Card>
             <div className="flex flex-wrap items-center gap-4">
               <span
-                className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-xl font-semibold text-white"
+                className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-blue-600 text-xl font-semibold text-white"
                 aria-hidden="true"
               >
                 {inisial || akun.name.charAt(0).toUpperCase()}
@@ -134,7 +134,7 @@ export default async function ProfilPage() {
           {isSiswa && (
             <>
               <div className="grid gap-4 sm:grid-cols-3">
-                <StatCard label="Rata-rata Nilai" value={rata} accent="bg-indigo-500" />
+                <StatCard label="Rata-rata Nilai" value={rata} accent="bg-blue-500" />
                 <StatCard
                   label="Kehadiran"
                   value={`${persenHadir}%`}
@@ -210,7 +210,7 @@ export default async function ProfilPage() {
                     <div className="min-w-0">
                       <p className="text-sm font-medium text-slate-800">{j.mapel.nama}</p>
                       <p className="text-xs text-slate-500">
-                        {j.jamMulai} &ndash; {j.jamSelesai} • {j.kelas.nama} • R. {j.ruangan ?? "-"}
+                        {j.jamMulai}&ndash;{j.jamSelesai} &bull; {j.kelas.nama} &bull; R. {j.ruangan ?? "-"}
                       </p>
                     </div>
                   </li>

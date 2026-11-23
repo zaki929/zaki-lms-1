@@ -7,6 +7,11 @@ async function main() {
   const hash = (p: string) => bcrypt.hashSync(p, 10);
 
   // ===== Users =====
+  await prisma.kalenderAkademik.deleteMany();
+  await prisma.modulAjar.deleteMany();
+  await prisma.atp.deleteMany();
+  await prisma.tujuan.deleteMany();
+  await prisma.capaian.deleteMany();
   await prisma.pengumuman.deleteMany();
   await prisma.absensi.deleteMany();
   await prisma.nilai.deleteMany();
@@ -306,6 +311,145 @@ async function main() {
         isi: "Modul ajar kurikulum merdeka untuk semester ini sudah dapat diakses di portal kurikulum.",
         target: "SEMUA",
         authorId: kurikulum.id,
+      },
+    ],
+  });
+
+  // ===== CP / TP / ATP =====
+  const cpMtk = await prisma.capaian.create({
+    data: {
+      fase: "E",
+      deskripsi:
+        "Peserta didik mampu menyelesaikan masalah yang berkaitan dengan operasi aljabar, persamaan, dan pertidaksamaan linear.",
+      mapelId: mtk.id,
+    },
+  });
+  const tpMtk1 = await prisma.tujuan.create({
+    data: { deskripsi: "Menjelaskan konsep persamaan linear satu variabel.", urutan: 1, capaianId: cpMtk.id },
+  });
+  const tpMtk2 = await prisma.tujuan.create({
+    data: { deskripsi: "Menyelesaikan masalah kontekstual dengan persamaan linear.", urutan: 2, capaianId: cpMtk.id },
+  });
+  await prisma.atp.createMany({
+    data: [
+      { judul: "Pengenalan variabel dan konstanta", alokasi: "4 JP", urutan: 1, tujuanId: tpMtk1.id },
+      { judul: "Penyelesaian persamaan linear satu variabel", alokasi: "6 JP", urutan: 2, tujuanId: tpMtk1.id },
+      { judul: "Penerapan pada soal cerita", alokasi: "6 JP", urutan: 1, tujuanId: tpMtk2.id },
+    ],
+  });
+
+  const cpBing = await prisma.capaian.create({
+    data: {
+      fase: "E",
+      deskripsi:
+        "Peserta didik mampu memahami dan memproduksi teks deskriptif lisan dan tulis secara mandiri.",
+      mapelId: bing.id,
+    },
+  });
+  const tpBing = await prisma.tujuan.create({
+    data: { deskripsi: "Menulis teks deskriptif sederhana tentang tempat favorit.", urutan: 1, capaianId: cpBing.id },
+  });
+  await prisma.atp.createMany({
+    data: [
+      { judul: "Struktur dan unsur kebahasaan descriptive text", alokasi: "4 JP", urutan: 1, tujuanId: tpBing.id },
+      { judul: "Menulis draft descriptive text", alokasi: "6 JP", urutan: 2, tujuanId: tpBing.id },
+    ],
+  });
+
+  const cpBdd = await prisma.capaian.create({
+    data: {
+      fase: "F",
+      deskripsi:
+        "Peserta didik mampu merancang dan mengelola basis data relasional serta menulis query SQL.",
+      mapelId: bindo.id,
+    },
+  });
+  const tpBdd = await prisma.tujuan.create({
+    data: { deskripsi: "Membuat dan memodifikasi tabel menggunakan SQL.", urutan: 1, capaianId: cpBdd.id },
+  });
+  await prisma.atp.create({
+    data: { judul: "DDL dan DML dasar", alokasi: "8 JP", urutan: 1, tujuanId: tpBdd.id },
+  });
+
+  const cpJpn = await prisma.capaian.create({
+    data: {
+      fase: "E",
+      deskripsi: "Peserta didik mampu membaca dan menulis huruf hiragana serta katakana.",
+      mapelId: jepang.id,
+    },
+  });
+  const tpJpn = await prisma.tujuan.create({
+    data: { deskripsi: "Menulis huruf hiragana dan katakana dengan benar.", urutan: 1, capaianId: cpJpn.id },
+  });
+  await prisma.atp.create({
+    data: { judul: "Latihan hiragana & katakana", alokasi: "6 JP", urutan: 1, tujuanId: tpJpn.id },
+  });
+
+  // ===== Modul Ajar / Perangkat Pembelajaran =====
+  await prisma.modulAjar.createMany({
+    data: [
+      {
+        judul: "Modul Ajar Persamaan Linear Satu Variabel",
+        status: "SELESAI",
+        file: "modul-plsv.pdf",
+        mapelId: mtk.id,
+        kelasId: kelasX.id,
+        guruId: guru.id,
+      },
+      {
+        judul: "Modul Ajar Descriptive Text",
+        status: "REVIEW",
+        file: "modul-descriptive.pdf",
+        mapelId: bing.id,
+        kelasId: kelasX.id,
+        guruId: guru.id,
+      },
+      {
+        judul: "Modul Ajar Pancasila dalam Kehidupan",
+        status: "DRAFT",
+        mapelId: pjk.id,
+        kelasId: kelasX.id,
+        guruId: guru.id,
+      },
+      {
+        judul: "Modul Ajar Basis Data Relasional",
+        status: "SELESAI",
+        file: "modul-basisdata.pdf",
+        mapelId: bindo.id,
+        kelasId: kelasXI.id,
+        guruId: guru2.id,
+      },
+    ],
+  });
+
+  // ===== Kalender Akademik =====
+  await prisma.kalenderAkademik.createMany({
+    data: [
+      {
+        judul: "Penilaian Tengah Semester",
+        jenis: "UJIAN",
+        mulai: new Date(now.getTime() + 14 * 86400000),
+        selesai: new Date(now.getTime() + 19 * 86400000),
+        keterangan: "PTS ganjil seluruh tingkat.",
+      },
+      {
+        judul: "Rapat Evaluasi Kurikulum",
+        jenis: "RAPAT",
+        mulai: new Date(now.getTime() + 7 * 86400000),
+        keterangan: "Ruang rapat, pukul 13.00.",
+      },
+      {
+        judul: "Libur Hari Raya",
+        jenis: "LIBUR",
+        mulai: new Date(now.getTime() + 30 * 86400000),
+        selesai: new Date(now.getTime() + 31 * 86400000),
+      },
+      {
+        judul: "Pekan Kreativitas Siswa",
+        jenis: "KEGIATAN",
+        mulai: new Date(now.getTime() + 45 * 86400000),
+        selesai: new Date(now.getTime() + 47 * 86400000),
+        keterangan: "Pameran karya dan lomba antar kelas.",
       },
     ],
   });

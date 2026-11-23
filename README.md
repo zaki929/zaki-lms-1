@@ -1,6 +1,6 @@
-# Citra Negara Zaki LMS
+# Citra Negara MANTAP LMS
 
-Learning Management System untuk sekolah dengan 5 role: **Administrator**, **Guru**,
+Learning Management System untuk SMK Citra Negara dengan 5 role: **Administrator**, **Guru**,
 **Siswa**, **Kepala Sekolah**, dan **Kurikulum**. Semua modul memakai satu database
 SQLite yang sama lewat Prisma, jadi data yang diinput satu role langsung terlihat
 role lain tanpa impor ulang.
@@ -116,7 +116,7 @@ Perbaikannya:
 ```powershell
 # 1. Matikan semua proses Node milik project ini
 Get-CimInstance Win32_Process -Filter "Name='node.exe'" |
-  Where-Object { $_.CommandLine -match "lms zaki" } |
+  Where-Object { $_.CommandLine -match "lms|mantap" } |
   ForEach-Object { Stop-Process -Id $_.ProcessId -Force }
 
 # 2. Bersihkan cache build

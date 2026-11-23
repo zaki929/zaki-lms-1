@@ -2,7 +2,7 @@ import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/guard";
 import { Badge, Card, EmptyState, PageHeader } from "@/components/ui";
-import { ActionForm, DeleteForm, Field, MultiSelect, TextArea } from "@/components/forms";
+import { ActionForm, DeleteForm, EditMapelForm, Field, MultiSelect, TextArea } from "@/components/forms";
 import { createMapel, deleteMapel } from "@/app/actions";
 
 export default async function MapelPage() {
@@ -41,11 +41,14 @@ export default async function MapelPage() {
                     <p className="mt-0.5 text-sm text-slate-500">{m.deskripsi ?? "Tidak ada deskripsi."}</p>
                   </div>
                   {canManage && (
-                    <DeleteForm
-                      action={deleteMapel}
-                      id={m.id}
-                      confirm={`Hapus mata pelajaran ${m.nama}?`}
-                    />
+                    <div className="flex shrink-0 items-center gap-2">
+                      <EditMapelForm mapel={m} allKelas={kelas} />
+                      <DeleteForm
+                        action={deleteMapel}
+                        id={m.id}
+                        confirm={`Hapus mata pelajaran ${m.nama}?`}
+                      />
+                    </div>
                   )}
                 </div>
                 <div className="mt-3 flex flex-wrap gap-2">
@@ -70,7 +73,7 @@ export default async function MapelPage() {
               <MultiSelect
                 label="Kelas"
                 name="kelasId"
-              options={kelas.map((k) => ({ value: k.id, label: k.nama }))}
+                options={kelas.map((k) => ({ value: k.id, label: k.nama }))}
               />
             </ActionForm>
           </div>
