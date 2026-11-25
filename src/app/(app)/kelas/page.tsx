@@ -32,6 +32,7 @@ export default async function KelasPage() {
     where: { role: "SISWA" },
     orderBy: { name: "asc" },
   });
+  const tahunAktif = await prisma.tahunAjaran.findFirst({ where: { aktif: true } });
 
   return (
     <div>
@@ -110,7 +111,7 @@ export default async function KelasPage() {
                 required
                 options={["X", "XI", "XII"].map((t) => ({ value: t, label: t }))}
               />
-              <Field label="Tahun Ajaran" name="tahun" required defaultValue="2025/2026" />
+              <Field label="Tahun Ajaran" name="tahun" required defaultValue={tahunAktif?.nama ?? "2025/2026"} />
               <Field label="Wali Kelas" name="wali" hint="Nama wali kelas, boleh dikosongkan." />
               <Field
                 label="Guru Pengampu"

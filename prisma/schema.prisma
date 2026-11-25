@@ -200,3 +200,12 @@ model KalenderAkademik {
   selesai    DateTime?
   keterangan String?
 }
+
+/// Tahun ajaran yang sedang berlaku dan semester aktifnya.
+model TahunAjaran {
+  id        String   @id @default(cuid())
+  nama      String   @unique
+  semester  Int      @default(1)
+  aktif     Boolean  @default(false)
+  createdAt DateTime @default(now())
+}

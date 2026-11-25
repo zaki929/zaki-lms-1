@@ -45,6 +45,7 @@ export default async function NilaiPage() {
     },
     orderBy: { name: "asc" },
   });
+  const tahunAktif = await prisma.tahunAjaran.findFirst({ where: { aktif: true } });
 
   // Tugas untuk dropdown dibatasi ke tugas milik guru yang sedang login.
   const tugasOpsi = await prisma.tugas.findMany({
@@ -146,7 +147,7 @@ export default async function NilaiPage() {
                 defaultValue="HARIAN"
                 options={TIPE_NILAI.map((t) => ({ value: t, label: t }))}
               />
-              <Field label="Semester" name="semester" type="number" defaultValue={1} min={1} max={12} required />
+              <Field label="Semester" name="semester" type="number" defaultValue={tahunAktif?.semester ?? 1} min={1} max={12} required />
               <Field label="Nilai (0-100)" name="nilai" type="number" min={0} max={100} step={0.1} required />
               <Field
                 label="Tugas (untuk nilai bertipe TUGAS)"

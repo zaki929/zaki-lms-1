@@ -3,7 +3,7 @@
 import { useActionState, useEffect, useState } from "react";
 import { useFormStatus } from "react-dom";
 import type { ActionState } from "@/app/actions";
-import { gradePengumpulan, updateNilai, updateJadwal, updateKelas, updateMapel, updatePengumuman } from "@/app/actions";
+import { gradePengumpulan, updateNilai, updateJadwal, updateKelas, updateMapel, updatePengumuman, updateTahunAjaran, setTahunAjaranAktif } from "@/app/actions";
 import { toastFromState } from "@/components/toast";
 
 type Action = (formData: FormData) => Promise<ActionState | void> | ActionState | void;
@@ -32,7 +32,15 @@ function Spinner() {
   );
 }
 
-export function DeleteButton({ label = "Hapus", tone = "danger" }: { label?: string; tone?: "danger" | "neutral" }) {
+export function DeleteButton({
+  label = "Hapus",
+  tone = "danger",
+  disabled,
+}: {
+  label?: string;
+  tone?: "danger" | "neutral";
+  disabled?: boolean;
+}) {
   const { pending } = useFormStatus();
   const style =
     tone === "danger"
@@ -41,7 +49,7 @@ export function DeleteButton({ label = "Hapus", tone = "danger" }: { label?: str
   return (
     <button
       type="submit"
-      disabled={pending}
+      disabled={pending || disabled}
       aria-busy={pending}
       className={`whitespace-nowrap rounded-md border px-2.5 py-1 text-xs font-medium transition disabled:cursor-not-allowed disabled:opacity-50 ${style}`}
     >
@@ -441,12 +449,14 @@ export function DeleteForm({
   id,
   label,
   confirm,
+  disabled,
 }: {
   action: Action;
   id: string;
   label?: string;
   /** Kalimat konfirmasi. Kosongkan hanya untuk aksi yang sangat jelas. */
   confirm?: string;
+  disabled?: boolean;
 }) {
   const [, formAction] = useFormAction(action);
   return (
@@ -460,7 +470,7 @@ export function DeleteForm({
       <input type="hidden" name="id" value={id} />
       {/* Hasilnya dilaporkan lewat toast: pesan error yang panjang di dalam
           <td> justru merusak layout tabel. */}
-      <DeleteButton label={label} />
+      <DeleteButton label={label} disabled={disabled} />
     </form>
   );
 }
@@ -661,3 +671,95 @@ export function EditKelasForm({
     </div>
   );
 }
+
+/**
+ * Form edit modal untuk satu tahun ajaran.
+ */
+export function EditTahunAjaranForm({
+  tahun,
+}: {
+  tahun: { id: string; nama: string; semester: number };
+}) {
+  const [state, formAction] = useFormAction(updateTahunAjaran);
+  const [buka, setBuka] = useState(false);
+
+  useEffect(() => {
+    if (buka && state?.success) setBuka(false);
+  }, [buka, state?.success]);
+
+  if (!buka) {
+    return (
+      <button
+        type="button"
+        onClick={() => setBuka(true)}
+        className="whitespace-nowrap rounded-md border border-slate-300 bg-white px-2.5 py-1 text-xs font-medium text-slate-600 transition hover:bg-slate-100"
+      >
+        Ubah
+      </button>
+    );
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+      <div className="w-full max-w-md rounded-xl bg-white p-5 shadow-xl">
+        <h3 className="text-sm font-semibold text-slate-800">Ubah Tahun Ajaran</h3>
+        <form action={formAction} className="mt-3 space-y-3">
+          <input type="hidden" name="id" value={tahun.id} />
+          <Field label="Nama Tahun Ajaran" name="nama" required defaultValue={tahun.nama} />
+          <Field
+            label="Semester"
+            name="semester"
+            type="number"
+            required
+            defaultValue={tahun.semester}
+            min={1}
+            max={2}
+          />
+          <div className="flex justify-end gap-2 pt-2">
+            <button
+              type="button"
+              onClick={() => setBuka(false)}
+              className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-100"
+            >
+              Batal
+            </button>
+            <button
+              type="submit"
+              className="rounded-md bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700"
+            >
+              Simpan
+            </button>
+          </div>
+          {state?.error && <p className="text-xs text-red-600">{state.error}</p>}
+        </form>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Tombol untuk menetapkan satu tahun ajaran sebagai aktif.
+ * Menggunakan useFormAction supaya pesan error/success tetap muncul via toast.
+ */
+export function TombolSetAktif({ tahun }: { tahun: { id: string; nama: string; aktif: boolean } }) {
+  const [, formAction] = useFormAction(setTahunAjaranAktif);
+  if (tahun.aktif) return null;
+  return (
+    <form
+      action={formAction}
+      className="inline-flex"
+      onSubmit={(e) => {
+        if (!window.confirm(`Set "${tahun.nama}" sebagai tahun ajaran aktif?`)) e.preventDefault();
+      }}
+    >
+      <input type="hidden" name="id" value={tahun.id} />
+      <button
+        type="submit"
+        className="rounded-md border border-slate-300 bg-white px-2.5 py-1 text-xs font-medium text-slate-600 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        Set Aktif
+      </button>
+    </form>
+  );
+}
+

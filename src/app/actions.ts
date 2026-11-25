@@ -1081,6 +1081,111 @@ async function deleteKalender(fd: FormData): Promise<ActionState> {
   return ok("Agenda kalender dihapus.");
 }
 
+// ============================================================
+// Tahun Ajaran: CRUD, tahun aktif, dan semester aktif
+// ============================================================
+
+function revalidateTahunAjaran() {
+  revalidatePath("/tahun-ajaran");
+  revalidatePath("/dashboard");
+  revalidatePath("/kelas");
+  revalidatePath("/nilai");
+}
+
+async function createTahunAjaran(fd: FormData): Promise<ActionState> {
+  const u = await currentUser();
+  requireRole(u.role, ["ADMIN", "KEPSEK"]);
+
+  const nama = str(fd, "nama");
+  const semester = Number(str(fd, "semester") || "1");
+  if (!nama) return err("Nama tahun ajaran wajib diisi.");
+  if (semester !== 1 && semester !== 2) return err("Semester harus 1 atau 2.");
+
+  const ada = await prisma.tahunAjaran.findUnique({ where: { nama } });
+  if (ada) return err("Tahun ajaran sudah terdaftar.");
+
+  await prisma.tahunAjaran.create({ data: { nama, semester } });
+  revalidateTahunAjaran();
+  return ok(`Tahun ajaran "${nama}" ditambahkan.`);
+}
+
+async function updateTahunAjaran(fd: FormData): Promise<ActionState> {
+  const u = await currentUser();
+  requireRole(u.role, ["ADMIN", "KEPSEK"]);
+
+  const id = str(fd, "id");
+  const nama = str(fd, "nama");
+  const semester = Number(str(fd, "semester") || "1");
+  if (!id) return err("Tahun ajaran tidak valid.");
+  if (!nama) return err("Nama tahun ajaran wajib diisi.");
+  if (semester !== 1 && semester !== 2) return err("Semester harus 1 atau 2.");
+
+  const ada = await prisma.tahunAjaran.findUnique({ where: { id } });
+  if (!ada) return err("Tahun ajaran tidak ditemukan.");
+
+  const duplikat = await prisma.tahunAjaran.findFirst({
+    where: { nama, NOT: { id } },
+  });
+  if (duplikat) return err("Nama tahun ajaran sudah digunakan.");
+
+  await prisma.tahunAjaran.update({ where: { id }, data: { nama, semester } });
+  revalidateTahunAjaran();
+  return ok("Tahun ajaran diperbarui.");
+}
+
+async function deleteTahunAjaran(fd: FormData): Promise<ActionState> {
+  const u = await currentUser();
+  requireRole(u.role, ["ADMIN", "KEPSEK"]);
+
+  const id = str(fd, "id");
+  const ta = await prisma.tahunAjaran.findUnique({ where: { id } });
+  if (!ta) return err("Tahun ajaran tidak ditemukan.");
+  if (ta.aktif) return err("Tahun ajaran aktif tidak bisa dihapus. Nonaktifkan dulu.");
+
+  const gag = await safeDelete(
+    () => prisma.tahunAjaran.delete({ where: { id } }),
+    () => "Tidak bisa menghapus tahun ajaran ini."
+  );
+  if (gag) return gag;
+  revalidateTahunAjaran();
+  return ok("Tahun ajaran berhasil dihapus.");
+}
+
+async function setTahunAjaranAktif(fd: FormData): Promise<ActionState> {
+  const u = await currentUser();
+  requireRole(u.role, ["ADMIN", "KEPSEK"]);
+
+  const id = str(fd, "id");
+  if (!id) return err("Tahun ajaran tidak valid.");
+
+  const ta = await prisma.tahunAjaran.findUnique({ where: { id } });
+  if (!ta) return err("Tahun ajaran tidak ditemukan.");
+
+  await prisma.$transaction([
+    prisma.tahunAjaran.updateMany({ data: { aktif: false } }),
+    prisma.tahunAjaran.update({ where: { id }, data: { aktif: true } }),
+  ]);
+  revalidateTahunAjaran();
+  return ok(`Tahun ajaran "${ta.nama}" sudah aktif.`);
+}
+
+async function setSemesterAktif(fd: FormData): Promise<ActionState> {
+  const u = await currentUser();
+  requireRole(u.role, ["ADMIN", "KEPSEK"]);
+
+  const id = str(fd, "id");
+  const semester = Number(str(fd, "semester") || "1");
+  if (!id) return err("Tahun ajaran tidak valid.");
+  if (semester !== 1 && semester !== 2) return err("Semester harus 1 atau 2.");
+
+  const ta = await prisma.tahunAjaran.findUnique({ where: { id } });
+  if (!ta) return err("Tahun ajaran tidak ditemukan.");
+
+  await prisma.tahunAjaran.update({ where: { id }, data: { semester } });
+  revalidateTahunAjaran();
+  return ok(`Semester ${semester} untuk "${ta.nama}" disetel aktif.`);
+}
+
 export {
   createTugas,
   deleteTugas,
@@ -1117,4 +1222,9 @@ export {
   deleteModulAjar,
   createKalender,
   deleteKalender,
+  createTahunAjaran,
+  updateTahunAjaran,
+  deleteTahunAjaran,
+  setTahunAjaranAktif,
+  setSemesterAktif,
 };

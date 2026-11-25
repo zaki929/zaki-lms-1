@@ -17,6 +17,8 @@ role lain tanpa impor ulang.
 | Data Kelas | `/kelas` | Semua role (hanya Admin yang boleh menambah) |
 | Mata Pelajaran | `/mapel` | Admin, Guru, Kepala Sekolah, Kurikulum |
 | Manajemen Pengguna | `/pengguna` | Admin, Kepala Sekolah |
+| Manajemen Kurikulum | `/kurikulum` | Admin, Kepala Sekolah, Kurikulum |
+| Tahun Ajaran | `/tahun-ajaran` | Admin, Kepala Sekolah |
 | Laporan | `/laporan` | Admin, Kepala Sekolah, Kurikulum |
 | Pengumuman | `/pengumuman` | Semua role |
 | Profil Saya | `/profil` | Semua role |
@@ -37,6 +39,7 @@ Halaman juga punya `loading` (skeleton), `error` (error boundary), dan
 | Lihat/input/hapus nilai | Admin, Guru |
 | Guru hanya untuk **siswa kelas yang ia ampu** | Guru |
 | Buat kelas, kelola pengguna | Admin |
+| Kelola tahun ajaran & semester aktif | Admin, Kepala Sekolah |
 | Buat mapel, jadwal | Admin, Kurikulum, Kepala Sekolah |
 
 Aturan di atas ditegakkan di server (`src/app/actions.ts` via `requireRole`),

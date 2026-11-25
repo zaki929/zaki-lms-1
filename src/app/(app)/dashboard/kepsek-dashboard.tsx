@@ -21,7 +21,7 @@ function rata(rows: number[]) {
 }
 
 export async function KepsekDashboard({ user }: { user: SessionUser }) {
-  const [totalSiswa, totalGuru, totalKelas, absensi, nilai, kelasData, guruList, totalTugas, totalPengumpulan] =
+  const [totalSiswa, totalGuru, totalKelas, absensi, nilai, kelasData, guruList, totalTugas, totalPengumpulan, tahunAktif] =
     await Promise.all([
       prisma.user.count({ where: { role: "SISWA" } }),
       prisma.user.count({ where: { role: "GURU" } }),
@@ -48,6 +48,7 @@ export async function KepsekDashboard({ user }: { user: SessionUser }) {
       }),
       prisma.tugas.count(),
       prisma.pengumpulan.count(),
+      prisma.tahunAjaran.findFirst({ where: { aktif: true } }),
     ]);
 
   const totalAbsensi = absensi.length;
@@ -101,7 +102,11 @@ export async function KepsekDashboard({ user }: { user: SessionUser }) {
     <div className="space-y-6">
       <PageHeader
         title={`Selamat datang, ${user.name.split(",")[0]}`}
-        desc={`Ringkasan performa sekolah — Anda login sebagai ${ROLE_LABEL[user.role]}.`}
+        desc={
+          tahunAktif
+            ? `Ringkasan performa sekolah — TA ${tahunAktif.nama} (Semester ${tahunAktif.semester}) — Anda login sebagai ${ROLE_LABEL[user.role]}.`
+            : `Ringkasan performa sekolah — Anda login sebagai ${ROLE_LABEL[user.role]}.`
+        }
       />
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">

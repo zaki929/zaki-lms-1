@@ -1,4 +1,4 @@
-$ErrorActionPreference = "Continue"
+﻿$ErrorActionPreference = "Continue"
 $base = "http://localhost:3000"
 
 # Password demo mengikuti prisma/seed.ts.
@@ -49,12 +49,12 @@ foreach ($c in $candidates) {
 # halaman akan mendapat 404 dari requireRole() — itu sesuai desain, bukan bug.
 $semua = @(
   "/dashboard","/tugas","/nilai","/absensi","/jadwal",
-  "/kelas","/mapel","/pengguna","/laporan","/pengumuman","/profil"
+  "/kelas","/mapel","/pengguna","/kurikulum","/tahun-ajaran","/laporan","/pengumuman","/profil"
 )
 $bisa = @{
   "ADMIN"     = $semua
   "KEPSEK"    = $semua
-  "KURIKULUM" = @("/dashboard","/tugas","/nilai","/absensi","/jadwal","/kelas","/mapel","/laporan","/pengumuman","/profil")
+  "KURIKULUM" = @("/dashboard","/tugas","/nilai","/absensi","/jadwal","/kelas","/mapel","/kurikulum","/laporan","/pengumuman","/profil")
   "GURU"      = @("/dashboard","/tugas","/nilai","/jadwal","/kelas","/mapel","/pengumuman","/profil")
   "SISWA"     = @("/dashboard","/tugas","/nilai","/jadwal","/kelas","/pengumuman","/profil")
 }

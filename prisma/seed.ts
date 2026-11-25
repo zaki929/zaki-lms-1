@@ -7,6 +7,7 @@ async function main() {
   const hash = (p: string) => bcrypt.hashSync(p, 10);
 
   // ===== Users =====
+  await prisma.tahunAjaran.deleteMany();
   await prisma.kalenderAkademik.deleteMany();
   await prisma.modulAjar.deleteMany();
   await prisma.atp.deleteMany();
@@ -451,6 +452,14 @@ async function main() {
         selesai: new Date(now.getTime() + 47 * 86400000),
         keterangan: "Pameran karya dan lomba antar kelas.",
       },
+    ],
+  });
+
+  // ===== Tahun Ajaran =====
+  await prisma.tahunAjaran.createMany({
+    data: [
+      { nama: "2024/2025", semester: 2, aktif: false },
+      { nama: "2025/2026", semester: 1, aktif: true },
     ],
   });
 
